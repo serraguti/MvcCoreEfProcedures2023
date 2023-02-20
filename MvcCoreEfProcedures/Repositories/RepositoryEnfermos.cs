@@ -18,6 +18,7 @@
 
 #endregion
 
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using MvcCoreEfProcedures.Data;
 using MvcCoreEfProcedures.Models;
@@ -66,6 +67,42 @@ namespace MvcCoreEfProcedures.Repositories
                 com.Connection.Close();
                 return enfermos;
             }
+        }
+
+        public Enfermo FindEnfermo(int inscripcion)
+        {
+            //PARA LLAMAR A LOS PROCEDIMIENTOS QUE CONTENGAN
+            //PARAMETROS DEBEMOS REALIZAR LA CONSULTA INCLUYENDO
+            //LOS NOMBRES DE PARAMETRO
+            // SP_PROCEDURE @PARAM1, @PARAM2
+            string sql = "SP_BUSCAR_ENFERMO @INSCRIPCION";
+            //LOS PARAMETROS SON LOS MISMOS QUE EN 
+            //ADO .NET SqlParameter
+            //EL NAMESPACE Microsoft.Data
+            SqlParameter paminscripcion =
+                new SqlParameter("@INSCRIPCION", inscripcion);
+            //AL SER UN PROCEDIMIENTO SELECT, PUEDEO UTILIZAR 
+            //EL METODO FromSqlRaw PARA EXTRAER LOS DATOS
+            //DICHO METODO SE APLICA SOBRE EL DbSet QUE DESEAMOS 
+            //EXTRAER
+            //CUANDO UTILIZAMOS PROCEDIMIENTOS NO PODEMOS EJECUTAR 
+            //EL PROCEDIMIENTO Y EXTRAER LOS DATOS A LA VEZ
+            var consulta = 
+                this.context.Enfermos.FromSqlRaw(sql, paminscripcion);
+            //EXTRAEMOS LAS ENTIDADES
+            Enfermo enfermo = consulta.AsEnumerable().FirstOrDefault();
+            return enfermo;
+        }
+
+        public void DeleteEnfermo(int inscripcion)
+        {
+            string sql = "SP_DELETE_ENFERMO @INSCRIPCION";
+            SqlParameter paminscripcion =
+                new SqlParameter("@INSCRIPCION", inscripcion);
+            //PARA EJECUTAR CONSULTAS DE ACCION EN UN PROCEDURE
+            //SE UTILIZA EL METODO ExecuteSqlRaw() Y VIENE DESDE
+            // Database
+            this.context.Database.ExecuteSqlRaw(sql, paminscripcion);
         }
     }
 }
